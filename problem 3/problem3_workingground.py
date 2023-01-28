@@ -13,13 +13,15 @@ Problem Description:
 #shebang will be below here
 #!/usr/bin/env python3
 
-#%% Block 1: simple example
+#%% Block 1: simple example - Sending a message
 
 #importing
 
 from email.message import EmailMessage
 import os.path
 import mimetypes
+import getpass
+import smtplib
 
 message = EmailMessage()
 
@@ -72,7 +74,31 @@ with open(attach_path, 'rb') as ap:
                            filename=attach_filename)
 
 #Adding a file will add a HUGE string when printing message, shorten it in oneway or another
-print(message)
+
+#Below are the info to set for the smtp site for outgoing messages, and a password asker to use later
+
+smtp_site = input("what is the smtp address to use")
+
+mail_pass = getpass.getpass("password? ")
+
+#now that we have that info we can open a server using the smtp site, setting debug to 1 is on to see
+#debug info
+
+mail_server = smtplib.SMTP_SSL(smtp_site)
+mail_server.set_debuglevel(1)
+
+#authenticates the connection using the username (email of sender) and password
+#it will ouput a tuple that will have a status code and message
+
+#Note!!! If this autentication fails it will raise a SMTPAuthenticationError exception, you'll need
+#to figure out a way to handle those!
+
+mail_server.login(sender, mail_pass)
+
+#finally the message with attachments is sent via the smtp server and then closed upon completion
+
+mail_server.send_message(message)
+mail_server.quit()
 
 
 
