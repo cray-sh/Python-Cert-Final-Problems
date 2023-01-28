@@ -101,6 +101,18 @@ mail_server.send_message(message)
 mail_server.quit()
 
 
+#%% Block 2 - Generate PDF Simple Example
+
+
+
+
+
+#%% Block 3 - Simple bring it all together Example
+
+
+
+#%% Block 4 - Final Code Customized for Problem
+
 
 
 
