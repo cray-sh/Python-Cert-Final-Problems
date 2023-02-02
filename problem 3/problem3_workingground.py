@@ -190,8 +190,35 @@ print(car47['car']['car_year'])
 total_sales_in_cash = float(car47['price'][1:]) * float(car47['total_sales'])
 print("The {car_make} made a total of {total_sales_in_cash}".format(car_make=car47['car']['car_model'], total_sales_in_cash=total_sales_in_cash))
 
+#This is the format function they use in process_data
 
-#%% Block 4 - Final Code Customized for Problem
+def format_car(car):
+    """Given a car dictionary, returns a nicely formatted name."""
+    return "{} {} ({})".format(car["car_make"], car["car_model"], car["car_year"])
+
+#%% Block 4 - Messing around with JSON
+
+#Loads JSON
+import json
+
+filename = "C:\\Users\\ADP55\\Desktop\\Master Scripts\\Python-Cert-Final-Problems\\Problem 3\\car_sales.json"
+
+def load_data(filename):
+    with open(filename) as json_file:
+        data = json.load(json_file)
+    return data
+
+#Below simulates one iteration of the for item in car_data loop
+
+the_data = load_data(filename)
+one_line = the_data[0]
+nice_name = format_car(one_line["car"])
+number_of_sales = one_line["total_sales"]
+
+print(one_line)
+print("The {} sold a total of {} units.".format(nice_name,number_of_sales))
+
+#%% Block 5 - Shaping Final Code Customized for Problem
 #This Code has been taken from Problem 3 "cars.py", the goal is to complete it
 
 #!/usr/bin/env python3
