@@ -34,9 +34,13 @@ import os.path
 import mimetypes
 import getpass
 import smtplib
+import emails
+import os
+import reports
+
 
 #below needs to be the path of the car_sales.json file
-datafile = "C:\\Users\\ADP55\\Desktop\\Master Scripts\\Python-Cert-Final-Problems\\Problem3\\car_sales.json"
+datafile = "C:\\Users\\ADP55\\Desktop\\Master Scripts\\Python-Cert-Final-Problems\\Problem 3\\car_sales.json"
 
 #below are fully finished functions used in main
 def load_data(filename):
@@ -67,6 +71,7 @@ def process_data(data):
     max_revenue = {"revenue" : 0}
     max_sales = 0
     max_make = ""
+    pop_years = {}
     
     for item in data:
         item_price = locale.atof(item["price"].strip('$'))
@@ -75,32 +80,45 @@ def process_data(data):
         if item_revenue > max_revenue["revenue"]:
             item["revenue"] = item_revenue
             max_revenue = item
-        
-#TODO:Handle Max Sales as well
-#TODO:Handle most popular car year too      
+          
  
         if item["total_sales"] > max_sales:
             max_sales = item["total_sales"]
-            max_make = item[""]
+            max_make = format_car(item["car"])
+        
+        if item["car"]["car_year"] in pop_years.keys():
+            pop_years[item["car"]["car_year"]] += item["total_sales"]
+        else:
+            pop_years[item["car"]["car_year"]] = item["total_sales"]
+        
+    most_pop_year = max(pop_years, key=pop_years.get)
+    no_pop_year = max(pop_years.values())    
         
         
     summary = ["The {} generated the most revenue: ${}".format(format_car(max_revenue["car"]), max_revenue["revenue"]),
-               "The {} had the most sales: {}".format(car model with most sales, total number of sales),
-               "The most popular year was {} with {} sales.".format(year of most pop year, number of sales it did)]    
+               "The {} had the most sales: {}".format(max_make, max_sales),
+               "The most popular year was {} with {} sales.".format(most_pop_year, no_pop_year)]    
         
     return summary    
-        
-        
+
         
 def main(argv):
     """Process the JSON data and generate a full report out of it."""
     data = load_data(datafile)
-    summery = process_data(data)
-    print(summary)
+    summary = process_data(data)
     
-#TODO: turn this summary into a PDF
-
-#TODO: afterwords you gotta send it as an email attachment
+    supersummary = "{} <br/> {} <br/> {}".format(summary[0],summary[1],summary[2])
+    the_table_data = cars_dict_to_table(data)
+    
+    reports.generate("/tmp/cars.pdf", "Sales summary for last month", supersummary, the_table_data)
+    
+    sender = "automation@example.com"
+    receiver = "{}@example.com".format(os.environ.get('USER'))
+    subject = "Sales summary for last month"
+    body = "{}\n{}\n{}".format(summary[0], summary[1], summary[2])
+    message = emails.generate(sender, receiver, subject, body, "/tmp/cars.pdf")
+    emails.send(message)
+    
 
 if __name__ == "__main__":
     main(sys.argv)
