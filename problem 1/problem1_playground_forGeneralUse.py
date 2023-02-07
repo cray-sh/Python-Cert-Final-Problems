@@ -73,6 +73,6 @@ for entry in os.listdir(basepath):
         output_file = fi
         try:
             with Image.open(basepath + entry) as start_image:
-                start_image_complete = start_image.resize((128,128)).rotate(90).convert('RGB').save(new_path+output_file,'JPEG')
+                start_image_complete = start_image.resize((128,128)).rotate(90).convert('RGB').save(new_path+output_file+new_ext,'JPEG')
         except OSError:
             print("Could not convert {}".format(output_file))

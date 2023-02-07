@@ -109,16 +109,37 @@ import json
 """
 Line 1 will be name, Line 2 will be weight, Line 3 will be description
 Four fields necessary:
-name (L1)
-weight (L2)
-description (L3)
-image_name - will be image that you want with this data
+-name (L1)
+-weight (L2)
+-description (L3)
+-image_name - will be image that you want with this data
 """
+#sets the location of text files and the url, then creates a list of files in location
 text_file_location = "~/supplier-data/descriptions/"
 url = "http://34.171.126.190/fruits/"
+list_of_files = os.listdir(text_file_location)
 
+#now for each file in that list, open it and read it's content to a dict, then
+#send dict to json.dumps, send json to url as a post and only notify when not ok
+for file in list_of_files:
+    if file.endswith('.txt'):
+        with open(text_file_location + file) as reg_file:
+            p_dict = {}
+            name, weight, desc = reg_file.readlines()
+#this should be a little trick to separate the extension
+            fi, ext = file.split('.')
+            image_name = fi + '.jpeg'
+            p_dict["name"] = name
+            p_dict["weight"] = weight
+            p_dict["description"] = desc
+            p_dict["image_name"] = image_name
+#dump to json, post to url, response only if not ok aka http 201            
+            p_dict_json = json.dumps(p_dict)
+            response = requests.post(url, json=p_dict_json)
+            if response.status_code != '201':
+                print(response.status_code)
 
-
+        
 
 
 

@@ -79,7 +79,8 @@ for element in list_of_files:
         print(response)
         
 #get a 201 and everything is okay, 500 check the syntax, and anything else check http docs
-        
+#IF YOU GET A 500 MAKE SURE TO CHECK THAT YOU PUT ALL THE SLASHES IN
+#URL MUST END IN SLASH    
         
 
 
