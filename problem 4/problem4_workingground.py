@@ -216,8 +216,6 @@ if __name__ == "__main__":
     message = emails.generate_email(sender,recipient,subject,body,attachment)
     emails.send_message(message)
 
-#TODO: Afterwards, attach the pdf created to an email below and then send it using specified info
-
 
 
 #%% Block 4C - emails.py
@@ -291,5 +289,6 @@ If an error is raised, it will need to send an email with following info:
         d. If hostname problem, subj_line = Error - localhost cannot be resolved to 127.0.0.1
     4. Body: Please check your system and resolve the issue as soon as possible.
 TODO:    NO ATTACHMENT - Will have to figure out a way to deal with that!!!!!
+   one way is to do the def generate error email as above, the other is to modify generate_email
 """
 #This will become health_check.py
