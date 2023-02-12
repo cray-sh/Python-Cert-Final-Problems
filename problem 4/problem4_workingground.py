@@ -88,7 +88,8 @@ for photo in os.listdir(path_of_pics):
 
 
 #%% Block 3 - A script to convert text files to JSON files to be uploaded to fruits
-# This will eventually become run.py
+# This is run.py
+
 """Example Json Object to upload
 
 {"name": "Watermelon",
@@ -139,48 +140,156 @@ for file in list_of_files:
             if response.status_code != '201':
                 print(response.status_code)
 
-        
+
+
+
+#%% Block 4A - Generate PDF Report
+#This will become reports.py
+"""
+Using the descriptions found in ~/supplier-data/descriptions/ create a pdf summarizing that data
+
+pdf format:
+    Processed Update on <Today's date>  <------- use a module to put in the date, also in bold
+    [blank line]
+    Name: Fruit One
+    Weight: x00 lbs
+    [blank line]
+    Name: Fruit Two
+    Weight: y00 lbs
+    [blank line]
+    ....repeat through all fruit found....
+
+
+It wants this to be called reports.py and be generalized to a function generate_report 
+which will take (attachment, title, paragraph)
+the name of the pdf should be processed.pdf
+"""
+
+#!/usr/bin/env python3
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+styles = getSampleStyleSheet()
+
+def generate_report(attachment, title, info):
+    """This creates a report at attachment using title as a title ["h1"], a blank_space 18 units
+    high to separate, and as much info that is there in ["Normal"]
+    """
+    report = SimpleDocTemplate(attachment)
+    form_title = Paragraph(title, styles['h1'])
+    blank_space = Spacer(1,18)
+    form_paragraph = Paragraph(info, styles['Normal'])
+    report.build([form_title, blank_space, form_paragraph])
+
+#%% Block 4B - Create and Send Report Email
+#This will become report_email.py
+#REMEMBER: Set username to your username
+
+#!/usr/bin/env python3
+
+import os
+import datetime
+import reports
+import emails
+
+username = ""
+
+#below gets the current time and converts it to usr/local date either MM/DD/YYYY or DD/MM/YYYY 
+today_date = datetime.datetime.now().strftime("%x")
+attachment = "/tmp/processed.pdf"
+title = "Processed Update on {}".format(today_date)
+
+#TODO Process Data from descriptions
+#Paragraph has to have the report with spaces between
+paragraph = ""
+
+
+if __name__ == "__main__":
+    reports.generate_report(attachment, title, paragraph)
+    
+    subject = "Upload Completed - Online Fruit Store"
+    sender = "automation@example.com"
+    recipient = "{}@example.com".format(username)
+    body = "All Fruits are uploaded to our website successfully. A detailed list is attached to this email."
+    
+    message = emails.generate_email(sender,recipient,subject,body,attachment)
+    emails.send_message(message)
+
+#TODO: Afterwards, attach the pdf created to an email below and then send it using specified info
+
+
+
+#%% Block 4C - emails.py
+#This will become emails.py, we are separating into several modules
+#This should be complete
+#A lot of this is grabbed from P3
+
+from email.message import EmailMessage
+import os.path
+import mimetypes
+import smtplib
+
+def generate_email(sender,recipient,subject,body,attachment):
+    """Creates an Email message to be sent with send_email, requires:
+        sender = sender email
+        recipient = recipient email
+        subject = subject of email
+        body = body of email
+        attachment = path of attachment
+    """
+    
+    message = EmailMessage()
+    message['From'] = sender
+    message['To'] = recipient
+    message['Subject'] = subject
+    message.set_content(body)
+    
+    attach_filename = os.path.basename(attachment)
+    mime_type, _ = mimetypes.guess_type(attachment)
+    mime_type,mime_subtype = mime_type.split('/',1)
+    
+    with open(attachment, 'rb') as ap:
+        message.add_attachment(ap.read(),
+                               maintype=mime_type,
+                               subtype=mime_subtype,
+                               filename=attach_filename)
+    return message
+
+
+def send_email(message):
+    """Given message is message from generate_email and is organized according to it, this
+    will send the message as an email over a SMTP server ran on the localhost
+    """
+    smtp_site = smtplib.SMTP('localhost')
+    smtp_site.set_debuglevel(1)
+    smtp_site.send_message(message)
+    smtp_site.quit()
+
+#TODO: def generate_error_email(send,recip,subj,body): <----have this work with send_email(message)
+#            return message
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-#%% Block 2 - 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#%% Block 5 - Healthcheck
+"""
+This needs to check the running computer for a few things:
+    1. Report Error if cpu usage is over 80%
+    2. Report Error if available disk space is lower than 20%
+    3. Report Error if available memory is less than 500MB
+    4. Report an error if the hostname "localhost" cannot be resolved to 127.0.0.1
+If an error is raised, it will need to send an email with following info:
+    1. From: automation@example.com
+    2. To: username@example.com replace username with username given in connection details on coursera
+    3. Subject Line: Should vary depending on error:
+        a. If CPU over 80% , subj_line = Error - CPU usage is over 80%
+        b. If Disk Space Low, subj_line = Error - Available disk space is less than 20%
+        c. If available memory is low, subj_line = Error - Available memory is less than 500MB
+        d. If hostname problem, subj_line = Error - localhost cannot be resolved to 127.0.0.1
+    4. Body: Please check your system and resolve the issue as soon as possible.
+TODO:    NO ATTACHMENT - Will have to figure out a way to deal with that!!!!!
+"""
+#This will become health_check.py

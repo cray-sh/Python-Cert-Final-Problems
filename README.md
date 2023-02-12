@@ -15,4 +15,15 @@ upload to website.
 
 Problem 3:
 
+Problem Description:
+Using a JSON file that includes sales data, fill in the script as needed so that it accomplishes the following:
+    1. Which car model had the most sales
+    (hint says call format_car method for this)
+    
+    2. Calculate the most popular car_year across all make/models.
+    (i.e. find how many cars were sold in each year and out of those which was the most)
+
+Using the conclusions found to 1 and 2, construct a PDF report that details this and send it to the given email/details
+
 Problem 4:
+This is a combination of everything learned so far, will update soon with full prompt
