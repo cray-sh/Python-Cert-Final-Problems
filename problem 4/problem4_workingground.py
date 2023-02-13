@@ -37,7 +37,7 @@ from PIL import Image
 import os
 import sys
 
-basepath = "//home//student-04-3ced89d2dcbd//supplier-data//images//"
+basepath = "//home//student-04-<this will change each time>//supplier-data//images//"
 new_path = basepath
 new_ext = ".jpeg"
 
@@ -71,6 +71,7 @@ with open('/usr/share/apache2/icons/icon.sheet.png', 'rb') as opened:
 #!/usr/bin/env python3
 
 import requests
+import os
 
 url = "http://localhost/upload/"
 #don't forget that slash at the end of upload!
@@ -107,6 +108,7 @@ for photo in os.listdir(path_of_pics):
 import requests
 import os
 import json
+import regex as re
 """
 Line 1 will be name, Line 2 will be weight, Line 3 will be description
 Four fields necessary:
@@ -128,10 +130,15 @@ for file in list_of_files:
             p_dict = {}
             name, weight, desc = reg_file.readlines()
 #this should be a little trick to separate the extension
+#the document warns that "weight" needs to be an integer, so a re.match was done to only match
+#the number portion of the weight and then converted to integer
             fi, ext = file.split('.')
             image_name = fi + '.jpeg'
+            regex = "[0-9]+"
+            transform_weight = re.match(regex,weight)
+            calc_weight = int(transform_weight[0])
             p_dict["name"] = name
-            p_dict["weight"] = weight
+            p_dict["weight"] = calc_weight
             p_dict["description"] = desc
             p_dict["image_name"] = image_name
 #dump to json, post to url, response only if not ok aka http 201            
@@ -195,17 +202,23 @@ import emails
 
 username = ""
 
-#below gets the current time and converts it to usr/local date either MM/DD/YYYY or DD/MM/YYYY 
-today_date = datetime.datetime.now().strftime("%x")
-attachment = "/tmp/processed.pdf"
-title = "Processed Update on {}".format(today_date)
-
-#TODO Process Data from descriptions
-#Paragraph has to have the report with spaces between
-paragraph = ""
-
+def process_data(text_file_location):
+    paragraph = []
+    list_of_files = os.listdir(text_file_location)
+    for file in list_of_files:
+        if file.endswith('.txt'):
+            with open(text_file_location + file) as reg_file:
+                name, weight, desc = reg_file.readlines()
+                new_line = "name: {}\nweight: {}\n\n\n".format(name,weight)
+                paragraph.append(new_line)
+    return paragraph
 
 if __name__ == "__main__":
+    paragraph = process_data("~/supplier-data/descriptions/")
+#below gets the current time and converts it to usr/local date either MM/DD/YYYY or DD/MM/YYYY     
+    attachment = "/tmp/processed.pdf"
+    today_date = datetime.datetime.now().strftime('%x')
+    title = "Processed Update on {}\n".format(today_date)
     reports.generate_report(attachment, title, paragraph)
     
     subject = "Upload Completed - Online Fruit Store"
@@ -264,10 +277,21 @@ def send_email(message):
     smtp_site.send_message(message)
     smtp_site.quit()
 
-#TODO: def generate_error_email(send,recip,subj,body): <----have this work with send_email(message)
-#            return message
-
-
+def generate_error_email(sender,recipient,subject,body):
+    """Creates an Email message when an error occurs to be sent with send_email, requires:
+        sender = sender email
+        recipient = recipient email
+        subject = subject of email
+        body = body of email
+    """
+#TODO this might need changed a little depending on hwo the healthcheck.py is setup    
+    message = EmailMessage()
+    message['From'] = sender
+    message['To'] = recipient
+    message['Subject'] = subject
+    message.set_content(body)
+    
+    return message
 
 
 
