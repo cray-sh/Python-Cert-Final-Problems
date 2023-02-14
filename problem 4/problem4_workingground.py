@@ -7,7 +7,9 @@ Again, I will use several blocks to organize all of the pieces of this project b
 putting them together in a more organized problem4_final.py
 
 Problem Description:
-
+Automate the resizing/formatting of photos, search through a variety of descriptions, use those two 
+to post to a website, then summarize that info in a pdf, have that pdf sent via email, and finally
+create a script to monitor the health of the system doing all of this to send an email if it's unhappy
 """
 #shebang to be used in linux environments will be below here
 #!/usr/bin/env python3
@@ -22,7 +24,7 @@ import shutil
 import psutil
 from PIL import Image
 
-path_for_linux = '//home//student-04-3ced89d2dcbd//supplier-data//images//'
+path_for_linux = '//home//student-04-6808baa0231a//supplier-data//images//'
 
 #%% Block 1b - This is createImage.py
 """
@@ -37,7 +39,7 @@ from PIL import Image
 import os
 import sys
 
-basepath = "//home//student-04-<this will change each time>//supplier-data//images//"
+basepath = "//home//student-04-6808baa0231a//supplier-data//images//"
 new_path = basepath
 new_ext = ".jpeg"
 
@@ -119,34 +121,44 @@ Four fields necessary:
 """
 #sets the location of text files and the url, then creates a list of files in location
 text_file_location = "~/supplier-data/descriptions/"
-url = "http://34.171.126.190/fruits/"
+url = "http://34.68.221.63/fruits/"
 list_of_files = os.listdir(text_file_location)
 
 #now for each file in that list, open it and read it's content to a dict, then
 #send dict to json.dumps, send json to url as a post and only notify when not ok
 for file in list_of_files:
     if file.endswith('.txt'):
-        with open(text_file_location + file) as reg_file:
-            p_dict = {}
-            name, weight, desc = reg_file.readlines()
+        try:
+            with open(text_file_location + file) as reg_file:
+                p_dict = {}
+#I'm running into a problem, sometimes the file has extra blank lines!
+#old                name, weight, desc = reg_file.readlines()
+#new is below... this is a cheap way to do it, a better way most likely exists
+                name = reg_file.readline().strip('\n')
+                weight = reg_file.readline().strip('\n')
+                desc = reg_file.readline().strip('\n')
+
 #this should be a little trick to separate the extension
 #the document warns that "weight" needs to be an integer, so a re.match was done to only match
 #the number portion of the weight and then converted to integer
-            fi, ext = file.split('.')
-            image_name = fi + '.jpeg'
-            regex = "[0-9]+"
-            transform_weight = re.match(regex,weight)
-            calc_weight = int(transform_weight[0])
-            p_dict["name"] = name
-            p_dict["weight"] = calc_weight
-            p_dict["description"] = desc
-            p_dict["image_name"] = image_name
+                fi, ext = file.split('.')
+                image_name = fi + '.jpeg'
+                pattern = "[0-9]+"
+                transform_weight = re.match(pattern,weight)
+                calc_weight = int(transform_weight[0])
+                p_dict["name"] = name
+                p_dict["weight"] = calc_weight
+                p_dict["description"] = desc
+                p_dict["image_name"] = image_name
 #dump to json, post to url, response only if not ok aka http 201            
-            p_dict_json = json.dumps(p_dict)
-            response = requests.post(url, json=p_dict_json)
-            if response.status_code != '201':
-                print(response.status_code)
-
+                p_dict_json = json.dumps(p_dict)
+                response = requests.post(url, json=p_dict_json)
+#if above doesn't work try below
+#                response = requests.post(url,data=p_dict)
+                if response.status_code != '201':
+                    print(response.status_code)
+        except ValueError:
+            print("something is wrong with {}".format(file))
 
 
 
@@ -200,7 +212,7 @@ import datetime
 import reports
 import emails
 
-username = ""
+username = 'student-04-6808baa0231a'
 
 def process_data(text_file_location):
     paragraph = []
@@ -208,18 +220,25 @@ def process_data(text_file_location):
     for file in list_of_files:
         if file.endswith('.txt'):
             with open(text_file_location + file) as reg_file:
-                name, weight, desc = reg_file.readlines()
-                new_line = "name: {}\nweight: {}\n\n\n".format(name,weight)
+                name = reg_file.readline()
+                weight = reg_file.readline()
+#had to switch to <br/>, use those when dealing in the pdf, use the other in python
+                new_line = "name: {}<br/>weight: {}<br/>".format(name,weight)
                 paragraph.append(new_line)
     return paragraph
-
+    
 if __name__ == "__main__":
-    paragraph = process_data("~/supplier-data/descriptions/")
+    paragraph_in_question = process_data("~/supplier-data/descriptions/")
 #below gets the current time and converts it to usr/local date either MM/DD/YYYY or DD/MM/YYYY     
     attachment = "/tmp/processed.pdf"
     today_date = datetime.datetime.now().strftime('%x')
+    
     title = "Processed Update on {}\n".format(today_date)
-    reports.generate_report(attachment, title, paragraph)
+    
+    
+    
+    superparagraph = "<br/><br/>".join(paragraph_in_question)
+    reports.generate_report(attachment, title, superparagraph)
     
     subject = "Upload Completed - Online Fruit Store"
     sender = "automation@example.com"
@@ -227,7 +246,7 @@ if __name__ == "__main__":
     body = "All Fruits are uploaded to our website successfully. A detailed list is attached to this email."
     
     message = emails.generate_email(sender,recipient,subject,body,attachment)
-    emails.send_message(message)
+    emails.send_email(message)
 
 
 
@@ -235,6 +254,7 @@ if __name__ == "__main__":
 #This will become emails.py, we are separating into several modules
 #This should be complete
 #A lot of this is grabbed from P3
+#!/usr/bin/env python3
 
 from email.message import EmailMessage
 import os.path
@@ -283,8 +303,7 @@ def generate_error_email(sender,recipient,subject,body):
         recipient = recipient email
         subject = subject of email
         body = body of email
-    """
-#TODO this might need changed a little depending on hwo the healthcheck.py is setup    
+    """  
     message = EmailMessage()
     message['From'] = sender
     message['To'] = recipient
@@ -296,7 +315,9 @@ def generate_error_email(sender,recipient,subject,body):
 
 
 
-#%% Block 5 - Healthcheck
+#%% Block 5 - Healthcheck.py
+
+#!/usr/bin/env python3
 """
 This needs to check the running computer for a few things:
     1. Report Error if cpu usage is over 80%
@@ -312,7 +333,57 @@ If an error is raised, it will need to send an email with following info:
         c. If available memory is low, subj_line = Error - Available memory is less than 500MB
         d. If hostname problem, subj_line = Error - localhost cannot be resolved to 127.0.0.1
     4. Body: Please check your system and resolve the issue as soon as possible.
-TODO:    NO ATTACHMENT - Will have to figure out a way to deal with that!!!!!
-   one way is to do the def generate error email as above, the other is to modify generate_email
+
+This can then be added as a crontab and executed every minute
+* * * * * <path of program> 
+above is the line you need for it to execute every minute
 """
-#This will become health_check.py
+import psutil
+import shutil
+import emails
+import socket
+
+#do a buncha checks
+total_flags = ""
+cpu_flag = ""
+disk_flag = ""
+mem_flag = ""
+net_flag = ""
+
+if psutil.cpu_percent() > 80:
+    cpu_flag = "Error - CPU usage is over 80%"
+    total_flags = total_flags + ', ' + cpu_flag
+    
+if shutil.disk_usage('/').free / shutil.disk_usage('/').total < 0.20:
+    disk_flag = "Error - Available disk space is less than 20%"
+    total_flags = total_flags + ', ' + disk_flag
+
+if psutil.virtual_memory()[4]/1000000 < 500:
+    mem_flag = "Error - Available memory is less than 500MB"
+    total_flags = total_flags + ', ' + mem_flag
+
+if socket.gethostbyname('localhost') != '127.0.0.1':
+    net_flag = "Error - localhost cannot be resolved to 127.0.0.1"
+    total_flags = total_flags + ', ' + net_flag
+
+#which checks failed? Make note of those.
+subject_line = total_flags
+body_to_send_if_bad_stuff_happening = "Please check your system and resolve the issue as soon as possible."
+
+#create email to send
+
+sender = "automation@example.com"
+recipient = "student-04-6808baa0231a@example.com"
+
+if total_flags != "":
+    emails.generate_error_email(sender,recipient,subject_line,body_to_send_if_bad_stuff_happening)
+    
+
+
+
+
+
+
+
+
+

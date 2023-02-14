@@ -26,4 +26,8 @@ Using a JSON file that includes sales data, fill in the script as needed so that
 Using the conclusions found to 1 and 2, construct a PDF report that details this and send it to the given email/details
 
 Problem 4:
-This is a combination of everything learned so far, will update soon with full prompt
+This is a combination of everything learned so far, check the script for more info, its a big one,
+
+Automate the resizing/formatting of photos, search through a variety of descriptions, use those two 
+to post to a website, then summarize that info in a pdf, have that pdf sent via email, and finally
+create a script to monitor the health of the system doing all of this to send an email if it's unhappy
